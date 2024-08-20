@@ -14,6 +14,8 @@ function App() {
   const [messageBody, setMessageBody] = useState('');
   const [response, setResponse] = useState('');
   const [threeMailActor, setThreeMailActor] = useState(null);
+  const [totalMessages, setTotalMessages] = useState(0);
+  const [searchSubject, setSearchSubject] = useState('');
 
   useEffect(() => {
     async function initAuth() {
@@ -150,23 +152,63 @@ function App() {
     }
   };
 
+  const handleGetTotalMessages = async () => {
+    try {
+      if (threeMailActor) {
+        const total = await threeMailActor.getTotalMessages();
+        setTotalMessages(total);
+        setResponse(`Total messages received: ${total}`);
+      }
+    } catch (error) {
+      console.error("Error retrieving total messages:", error);
+    }
+  };
+
+  const handleDeleteAllMessages = async () => {
+    if (window.confirm("Are you sure you want to delete all your messages? This action cannot be undone.")) {
+      try {
+        if (threeMailActor) {
+          const result = await threeMailActor.deleteAllMessages();
+          setResponse(result);
+          // Clear the messages list after deletion
+          setMessages([]);
+        }
+      } catch (error) {
+        console.error("Error deleting all messages:", error);
+      }
+    }
+  };
+
+  const handleSearchBySubject = async (event) => {
+    event.preventDefault();
+    try {
+      if (threeMailActor) {
+        let searchResults = await threeMailActor.searchBySubject(searchSubject);
+        // Sort messages so that the newest ones are first
+        searchResults = searchResults.sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
+        setMessages(searchResults);
+      }
+    } catch (error) {
+      console.error("Error searching messages by subject:", error);
+    }
+  };
+
   return (
     <main style={{ fontFamily: 'Arial, sans-serif', margin: '20px' }}>
       <h1>3Mail</h1>
-      <h2>on ICP</h2>
       {!isAuthenticated ? (
         <button onClick={handleLogin} style={{ padding: '10px 20px', cursor: 'pointer' }}>
           Log in with Internet Identity
         </button>
       ) : (
         <div>
-          <p>Your 3Mail ID - {principal}</p>
+          <p><strong>Your 3Mail Address </strong><br></br> {principal}</p>
           <button onClick={handleLogout} style={{ padding: '10px 20px', cursor: 'pointer' }}>
             Logout
           </button>
           <div style={{ marginTop: '20px' }}>
             <h2>Send a Message</h2>
-            <form onSubmit={handleSendMessage} style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
+            <form onSubmit={handleSendMessage} style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '10px', paddingLeft: '20px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
                 <label>Recipient PID:</label>
                 <input
@@ -197,15 +239,38 @@ function App() {
             </form>
             {response && <p>{response}</p>}
           </div>
-          <button onClick={handleGetMessages} style={{ padding: '10px 20px', cursor: 'pointer', marginTop: '20px' }}>
-            Get My Messages
-          </button>
-          <button onClick={handleGetUnviewedMessages} style={{ padding: '10px 20px', cursor: 'pointer', marginTop: '20px', marginLeft: '10px' }}>
-            Get Unviewed Messages
-          </button>
-          <button onClick={handleGetSentMessages} style={{ padding: '10px 20px', cursor: 'pointer', marginTop: '20px', marginLeft: '10px' }}>
-            Get Sent Messages
-          </button>
+
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+            <button onClick={handleGetMessages} style={{ padding: '10px 20px', cursor: 'pointer' }}>
+              Get My Messages
+            </button>
+            <button onClick={handleGetUnviewedMessages} style={{ padding: '10px 20px', cursor: 'pointer' }}>
+              Get Unviewed Messages
+            </button>
+            <button onClick={handleGetSentMessages} style={{ padding: '10px 20px', cursor: 'pointer' }}>
+              Get Sent Messages
+            </button>
+            <button onClick={handleGetTotalMessages} style={{ padding: '10px 20px', cursor: 'pointer' }}>
+              Check Total Messages
+            </button>
+            <button onClick={handleDeleteAllMessages} style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: 'red', color: 'white' }}>
+              Delete All Messages
+            </button>
+          </div>
+
+          <form onSubmit={handleSearchBySubject} style={{ marginBottom: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+              <label>Search Messages by Subject:</label>
+              <input
+                type="text"
+                value={searchSubject}
+                onChange={(e) => setSearchSubject(e.target.value)}
+                style={{ padding: '5px', width: '300px' }}
+              />
+              <button type="submit" style={{ padding: '10px 20px', cursor: 'pointer', marginTop: '10px', alignSelf: 'flex-start' }}>Search</button>
+            </div>
+          </form>
+
           {messages.length > 0 && (
             <div style={{ maxHeight: '300px', overflowY: 'scroll', border: '1px solid #ccc', padding: '10px', marginTop: '20px' }}>
               {messages.map((msg, index) => (

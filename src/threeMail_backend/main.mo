@@ -80,11 +80,13 @@ actor class Mailbox() = this {
     return markMessagesAsViewedAndUpdateStorage(relevantMessages);
   };
 
-  // Updated function to count messages relevant to the caller
+  // Updated function to count messages relevant to the caller (only counts received messages)
   public shared(msg) func getTotalMessages() : async Nat {
     let caller = msg.caller;
-    let relevantMessages = filterMessagesByPidAndMarkViewed(caller, messages);
-    return Array.size<Message>(relevantMessages);
+    let receivedMessages = Array.filter<Message>(messages, func (m) : Bool {
+      m.recipient == caller
+    });
+    return Array.size<Message>(receivedMessages);
   };
 
   // Function to search messages by PID
@@ -179,6 +181,21 @@ actor class Mailbox() = this {
       return "Viewed message(s) deleted successfully. Total deleted: " # Nat.toText(deletedCount);
     } else {
       return "No viewed messages to delete or unauthorized.";
+    }
+  };
+
+  // Function to delete all messages (with confirmation)
+  public shared(msg) func deleteAllMessages() : async Text {
+    let caller = msg.caller;
+    let initialLength = Array.size<Message>(messages);
+    messages := Array.filter<Message>(messages, func (m) : Bool {
+      m.recipient != caller // Retain only messages not received by the caller
+    });
+    let deletedCount = initialLength - Array.size<Message>(messages);
+    if (deletedCount > 0) {
+      return "All messages deleted successfully. Total deleted: " # Nat.toText(deletedCount);
+    } else {
+      return "No messages to delete or unauthorized.";
     }
   };
 
