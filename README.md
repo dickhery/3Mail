@@ -1,59 +1,118 @@
-# `threeMail`
 
-Welcome to your new `threeMail` project and to the Internet Computer development community. By default, creating a new project adds this README and some template files to your project directory. You can edit these template files to customize your project and to include your own code to speed up the development cycle.
+# `3Mail`
 
-To get started, you might want to explore the project directory structure and the default configuration file. Working with this project in your development environment will not affect any production deployment or identity tokens.
+Welcome to `3Mail`, a decentralized messaging application built on the Internet Computer (ICP) blockchain. `3Mail` allows users to send and receive messages securely, with messages stored directly on the blockchain. Only the intended recipient can view the messages, ensuring privacy and security.
 
-To learn more before you start working with `threeMail`, see the following documentation available online:
+This README will guide you through setting up, deploying, and using the `3Mail` project both locally and on the ICP mainnet.
 
-- [Quick Start](https://internetcomputer.org/docs/current/developer-docs/setup/deploy-locally)
-- [SDK Developer Tools](https://internetcomputer.org/docs/current/developer-docs/setup/install)
+## Project Overview
+
+`3Mail` includes a backend canister written in Motoko, handling message storage and retrieval, and a React-based frontend for user interaction. The frontend allows users to submit messages, view received messages, and interact with the decentralized backend.
+
+To learn more about the technologies used in this project, see the following documentation:
+
+- [Internet Computer Quick Start](https://internetcomputer.org/docs/current/developer-docs/setup/deploy-locally)
+- [DFX SDK Developer Tools](https://internetcomputer.org/docs/current/developer-docs/setup/install)
 - [Motoko Programming Language Guide](https://internetcomputer.org/docs/current/motoko/main/motoko)
-- [Motoko Language Quick Reference](https://internetcomputer.org/docs/current/motoko/main/language-manual)
+- [React Documentation](https://reactjs.org/docs/getting-started.html)
 
-If you want to start working on your project right away, you might want to try the following commands:
+## Project Structure
 
-```bash
-cd threeMail/
-dfx help
-dfx canister --help
+```plaintext
+custom_mailbox/
+├── src/
+│   ├── threeMail_backend/
+│   │   └── main.mo    # The backend canister code (written in Motoko)
+│   └── custom_mailbox_frontend/
+│       ├── src/
+│       │   ├── App.jsx  # The main React component
+│       │   ├── index.jsx # Entry point for React
+│       │   └── index.scss # Stylesheet
+│       └── public/
+│           └── index.html  # HTML template
+└── dfx.json  # Configuration file for the project
 ```
 
-## Running the project locally
+## Running the Project Locally
 
-If you want to test your project locally, you can use the following commands:
+To test and develop `3Mail` locally, follow these steps:
+
+1. **Start the Internet Computer local replica**:
+   ```bash
+   dfx start --background
+   ```
+
+2. **Deploy the canisters to the local replica**:
+   ```bash
+   dfx deploy
+   ```
+
+   Once deployed, your application will be accessible at `http://localhost:4943?canisterId={asset_canister_id}`.
+
+3. **Generate the Candid interface** (if you make changes to the backend):
+   ```bash
+   npm run generate
+   ```
+
+4. **Start the frontend development server**:
+   ```bash
+   npm start
+   ```
+
+   This will start a server at `http://localhost:8080`, which will proxy API requests to the replica running at port 4943.
+
+## Deploying to the Internet Computer Mainnet
+
+To deploy `3Mail` to the Internet Computer mainnet, ensure you have enough cycles and run:
 
 ```bash
-# Starts the replica, running in the background
-dfx start --background
-
-# Deploys your canisters to the replica and generates your candid interface
-dfx deploy
+dfx deploy --network ic
 ```
 
-Once the job completes, your application will be available at `http://localhost:4943?canisterId={asset_canister_id}`.
+After deployment, you can access your app via the provided URL, such as `https://<canister-id>.ic0.app/`.
 
-If you have made changes to your backend canister, you can generate a new candid interface with
+## Using 3Mail
 
-```bash
-npm run generate
-```
+### Sending a Message
 
-at any time. This is recommended before starting the frontend development server, and will be run automatically any time you run `dfx deploy`.
+1. **Enter the recipient's Principal ID** in the designated input field.
+2. **Type a subject** and **compose your message**.
+3. Click **Send Message** to submit the message to the backend.
 
-If you are making frontend changes, you can start a development server with
+### Viewing Messages
 
-```bash
-npm start
-```
+1. Click **Get My Messages** to retrieve and view all messages addressed to your Principal ID.
+2. Messages will be displayed in a scrollable list format.
 
-Which will start a server at `http://localhost:8080`, proxying API requests to the replica at port 4943.
+### Environment Variables for Frontend
 
-### Note on frontend environment variables
+If you are hosting the frontend separately from DFX, ensure the following adjustments are made:
 
-If you are hosting frontend code somewhere without using DFX, you may need to make one of the following adjustments to ensure your project does not fetch the root key in production:
+- Set `DFX_NETWORK` to `ic` if using Webpack for production.
+- Replace `process.env.DFX_NETWORK` in autogenerated declarations, or use the `env_override` option in `dfx.json`.
 
-- set`DFX_NETWORK` to `ic` if you are using Webpack
-- use your own preferred method to replace `process.env.DFX_NETWORK` in the autogenerated declarations
-  - Setting `canisters -> {asset_canister_id} -> declarations -> env_override to a string` in `dfx.json` will replace `process.env.DFX_NETWORK` with the string in the autogenerated declarations
-- Write your own `createActor` constructor
+## Customization and Further Development
+
+You can customize the frontend by editing the React components in `src/custom_mailbox_frontend/src/`. Styles can be adjusted in the `index.scss` file. 
+
+### Future Improvements
+
+- Add pagination or search functionality for messages.
+- Implement additional security features.
+- Enhance the user interface with more advanced CSS or integrate a UI framework like Bootstrap or Material-UI.
+
+## Troubleshooting
+
+If you encounter any issues, consider the following:
+
+- Verify that DFX is running (`dfx start --background`).
+- Ensure the backend canister is correctly deployed and up-to-date (`dfx deploy`).
+- Check the browser console for any errors in the frontend.
+
+## Contributing
+
+Contributions are welcome! Feel free to fork this repository, make your changes, and submit a pull request.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
