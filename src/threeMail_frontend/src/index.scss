@@ -15,7 +15,7 @@ form {
   justify-content: center;
   gap: 0.5em;
   flex-flow: row wrap;
-  max-width: 40vw;
+  max-width: 90vw; /* Updated to handle mobile devices */
   margin: auto;
   align-items: baseline;
 }

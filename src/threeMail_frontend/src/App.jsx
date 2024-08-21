@@ -217,8 +217,28 @@ function App() {
     }
   };
 
+  // Add styles for the background images
+  const backgroundStyle = {
+    backgroundImage: `url('/images/login-background.jpg')`, // Login background image
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    height: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  };
+
+  const mainBackgroundStyle = {
+    backgroundImage: `url('/images/main-background.jpg')`, // Main page background image
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    minHeight: '100vh',
+  };
+
   return (
-    <main style={{ fontFamily: 'Arial, sans-serif', margin: '20px' }}>
+    <main style={isAuthenticated ? mainBackgroundStyle : backgroundStyle}>
       <h1>3Mail</h1>
       {!isAuthenticated ? (
         <button onClick={handleLogin} style={{ padding: '10px 20px', cursor: 'pointer' }}>
@@ -303,6 +323,12 @@ function App() {
                   <strong>Message:</strong> {msg.message}<br />
                   <strong>Timestamp:</strong> {new Date(Number(msg.timestamp / 1000000n)).toLocaleString()}<br />
                   <strong>From:</strong> {msg.sender.toText()}<br />
+                  {msg.recipient ? (
+                    <>
+                      <strong>To:</strong> {msg.recipient.toText()}<br />
+                    </>
+                  ) : null}
+
                   <button onClick={() => handleMarkAsViewed(msg.subject)} style={{ marginLeft: '10px', cursor: 'pointer' }}>Mark as Viewed</button>
                   <button onClick={() => handleDeleteMessage(msg.subject)} style={{ marginLeft: '10px', cursor: 'pointer' }}>Delete</button>
                 </div>
