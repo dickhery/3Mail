@@ -12,24 +12,25 @@
       "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz"
     },
     "threeMail_backend": {
+      "type": "motoko",
       "main": "src/threeMail_backend/main.mo",
-      "type": "motoko"
+      "candid": "src/threeMail_backend/threeMail_backend.did"
     },
     "threeMail_frontend": {
-      "dependencies": [
-        "threeMail_backend"
-      ],
+      "type": "assets",
       "source": [
         "src/threeMail_frontend/dist"
       ],
-      "type": "assets",
-      "workspace": "threeMail_frontend"
+      "dependencies": [
+        "threeMail_backend"
+      ],
+      "candid": "src/threeMail_frontend/threeMail_frontend.did"
     }
   },
   "defaults": {
     "build": {
-      "args": "",
-      "packtool": ""
+      "packtool": "",
+      "args": ""
     }
   },
   "output_env_file": ".env",
