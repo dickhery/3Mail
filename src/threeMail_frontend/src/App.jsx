@@ -15,7 +15,7 @@ function App() {
   const [response, setResponse] = useState('');
   const [threeMailActor, setThreeMailActor] = useState(null);
   const [totalMessages, setTotalMessages] = useState(0);
-  const [totalMessagesSent, setTotalMessagesSent] = useState(null); // For displaying total sent messages
+  const [totalMessagesSent, setTotalMessagesSent] = useState(null);
   const [searchSubject, setSearchSubject] = useState('');
 
   // Initialize the auth client and fetch the total messages sent
@@ -39,16 +39,16 @@ function App() {
         // Fetch the total number of messages sent
         try {
           const totalSent = await actor.getTotalMessagesSent();
-          console.log('Total Messages Sent:', totalSent);  // Debugging line
-          setTotalMessagesSent(totalSent.toString());  // Convert to string
+          console.log('Total Messages Sent:', totalSent);
+          setTotalMessagesSent(totalSent.toString());
         } catch (error) {
           console.error('Failed to fetch total messages sent:', error);
-          setTotalMessagesSent("0");  // Ensure state is updated even on error
+          setTotalMessagesSent("0");
         }
       }
     }
     initAuth();
-  }, []);  // Empty dependency array means this runs once on component mount
+  }, []);
 
   const handleLogin = async () => {
     if (authClient) {
@@ -68,11 +68,11 @@ function App() {
 
           try {
             const totalSent = await actor.getTotalMessagesSent();
-            console.log('Total Messages Sent:', totalSent);  // Debugging line
-            setTotalMessagesSent(totalSent.toString());  // Convert to string
+            console.log('Total Messages Sent:', totalSent);
+            setTotalMessagesSent(totalSent.toString());
           } catch (error) {
             console.error('Failed to fetch total messages sent:', error);
-            setTotalMessagesSent("0");  // Ensure state is updated even on error
+            setTotalMessagesSent("0");
           }
         }
       });
@@ -96,14 +96,14 @@ function App() {
         const recipientPrincipal = Principal.fromText(recipient);
         const result = await threeMailActor.submitMessage(recipientPrincipal, subject, messageBody);
         setResponse(result);
-        setRecipient('');  // Clear the recipient field after sending
-        setSubject('');     // Clear the subject field after sending
-        setMessageBody(''); // Clear the message field after sending
+        setRecipient('');
+        setSubject('');
+        setMessageBody('');
 
         // Update the total messages sent
         const totalSent = await threeMailActor.getTotalMessagesSent();
-        console.log('Total Messages Sent After Sending:', totalSent);  // Debugging line
-        setTotalMessagesSent(totalSent.toString());  // Convert to string
+        console.log('Total Messages Sent After Sending:', totalSent);
+        setTotalMessagesSent(totalSent.toString());
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -115,8 +115,6 @@ function App() {
     try {
       if (threeMailActor) {
         let userMessages = await threeMailActor.getMyMessages();
-        // Sort messages so that the newest ones are first
-        userMessages = userMessages.sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
         setMessages(userMessages);
       }
     } catch (error) {
@@ -128,8 +126,6 @@ function App() {
     try {
       if (threeMailActor) {
         let userMessages = await threeMailActor.getUnviewedMessages();
-        // Sort messages so that the newest ones are first
-        userMessages = userMessages.sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
         setMessages(userMessages);
       }
     } catch (error) {
@@ -141,8 +137,6 @@ function App() {
     try {
       if (threeMailActor) {
         let sentMessages = await threeMailActor.getSentMessages();
-        // Sort messages so that the newest ones are first
-        sentMessages = sentMessages.sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
         setMessages(sentMessages);
       }
     } catch (error) {
@@ -155,7 +149,6 @@ function App() {
       if (threeMailActor) {
         const result = await threeMailActor.deleteMessage(subject);
         setResponse(result);
-        // Refresh the message list after deletion
         handleGetMessages();
       }
     } catch (error) {
@@ -168,7 +161,6 @@ function App() {
       if (threeMailActor) {
         const result = await threeMailActor.markAsViewed(subject);
         setResponse(result);
-        // Refresh the message list after marking as viewed
         handleGetMessages();
       }
     } catch (error) {
@@ -194,7 +186,6 @@ function App() {
         if (threeMailActor) {
           const result = await threeMailActor.deleteAllMessages();
           setResponse(result);
-          // Clear the messages list after deletion
           setMessages([]);
         }
       } catch (error) {
@@ -208,8 +199,6 @@ function App() {
     try {
       if (threeMailActor) {
         let searchResults = await threeMailActor.searchBySubject(searchSubject);
-        // Sort messages so that the newest ones are first
-        searchResults = searchResults.sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
         setMessages(searchResults);
       }
     } catch (error) {
@@ -217,9 +206,8 @@ function App() {
     }
   };
 
-  // Add styles for the background images
   const backgroundStyle = {
-    backgroundImage: `url('/images/login-background.jpg')`, // Login background image
+    backgroundImage: `url('/images/login-background.jpg')`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
@@ -230,7 +218,7 @@ function App() {
   };
 
   const mainBackgroundStyle = {
-    backgroundImage: `url('/images/main-background.jpg')`, // Main page background image
+    backgroundImage: `url('/images/main-background.jpg')`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
@@ -246,7 +234,7 @@ function App() {
         </button>
       ) : (
         <div>
-          <p><strong>Your 3Mail Address </strong><br></br> {principal}</p>
+          <p><strong>Your 3Mail Address </strong><br /> {principal}</p>
           <button onClick={handleLogout} style={{ padding: '10px 20px', cursor: 'pointer' }}>
             Logout
           </button>
@@ -336,7 +324,6 @@ function App() {
             </div>
           )}
 
-          {/* Display total messages sent */}
           <div style={{ marginTop: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '10px', textAlign: 'center' }}>
             <h2>About 3Mail</h2>
             <p>
@@ -351,7 +338,6 @@ function App() {
             </p>
           </div>
 
-          {/* Advertisement Spot */}
           <div style={{ marginTop: '30px', textAlign: 'center' }}>
             <h3>Brought to you by</h3>
             <a href="https://3jorm-yqaaa-aaaam-aaa6a-cai.ic0.app/index-gaming.html" target="_blank" rel="noopener noreferrer">
