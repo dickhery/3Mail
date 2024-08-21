@@ -15,8 +15,10 @@ function App() {
   const [response, setResponse] = useState('');
   const [threeMailActor, setThreeMailActor] = useState(null);
   const [totalMessages, setTotalMessages] = useState(0);
+  const [totalMessagesSent, setTotalMessagesSent] = useState(null); // For displaying total sent messages
   const [searchSubject, setSearchSubject] = useState('');
 
+  // Initialize the auth client and fetch the total messages sent
   useEffect(() => {
     async function initAuth() {
       const client = await AuthClient.create();
@@ -27,17 +29,26 @@ function App() {
         setPrincipal(identity.getPrincipal().toText());
         setIsAuthenticated(true);
 
-        // Create an actor using the authenticated identity
         const agent = new HttpAgent({ identity });
         const actor = Actor.createActor(threeMail_backend_idl, {
           agent,
           canisterId: threeMail_backend_id,
         });
         setThreeMailActor(actor);
+
+        // Fetch the total number of messages sent
+        try {
+          const totalSent = await actor.getTotalMessagesSent();
+          console.log('Total Messages Sent:', totalSent);  // Debugging line
+          setTotalMessagesSent(totalSent.toString());  // Convert to string
+        } catch (error) {
+          console.error('Failed to fetch total messages sent:', error);
+          setTotalMessagesSent("0");  // Ensure state is updated even on error
+        }
       }
     }
     initAuth();
-  }, []);
+  }, []);  // Empty dependency array means this runs once on component mount
 
   const handleLogin = async () => {
     if (authClient) {
@@ -48,13 +59,21 @@ function App() {
           setPrincipal(identity.getPrincipal().toText());
           setIsAuthenticated(true);
 
-          // Create an actor using the authenticated identity
           const agent = new HttpAgent({ identity });
           const actor = Actor.createActor(threeMail_backend_idl, {
             agent,
             canisterId: threeMail_backend_id,
           });
           setThreeMailActor(actor);
+
+          try {
+            const totalSent = await actor.getTotalMessagesSent();
+            console.log('Total Messages Sent:', totalSent);  // Debugging line
+            setTotalMessagesSent(totalSent.toString());  // Convert to string
+          } catch (error) {
+            console.error('Failed to fetch total messages sent:', error);
+            setTotalMessagesSent("0");  // Ensure state is updated even on error
+          }
         }
       });
     }
@@ -67,6 +86,28 @@ function App() {
       setPrincipal('');
       setMessages([]);
       setThreeMailActor(null);
+    }
+  };
+
+  const handleSendMessage = async (event) => {
+    event.preventDefault();
+    try {
+      if (threeMailActor) {
+        const recipientPrincipal = Principal.fromText(recipient);
+        const result = await threeMailActor.submitMessage(recipientPrincipal, subject, messageBody);
+        setResponse(result);
+        setRecipient('');  // Clear the recipient field after sending
+        setSubject('');     // Clear the subject field after sending
+        setMessageBody(''); // Clear the message field after sending
+
+        // Update the total messages sent
+        const totalSent = await threeMailActor.getTotalMessagesSent();
+        console.log('Total Messages Sent After Sending:', totalSent);  // Debugging line
+        setTotalMessagesSent(totalSent.toString());  // Convert to string
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      setResponse("Failed to send message.");
     }
   };
 
@@ -106,23 +147,6 @@ function App() {
       }
     } catch (error) {
       console.error("Error retrieving sent messages:", error);
-    }
-  };
-
-  const handleSendMessage = async (event) => {
-    event.preventDefault();
-    try {
-      if (threeMailActor) {
-        const recipientPrincipal = Principal.fromText(recipient);
-        const result = await threeMailActor.submitMessage(recipientPrincipal, subject, messageBody);
-        setResponse(result);
-        setRecipient('');  // Clear the recipient field after sending
-        setSubject('');     // Clear the subject field after sending
-        setMessageBody(''); // Clear the message field after sending
-      }
-    } catch (error) {
-      console.error("Error sending message:", error);
-      setResponse("Failed to send message.");
     }
   };
 
@@ -286,11 +310,26 @@ function App() {
             </div>
           )}
 
+          {/* Display total messages sent */}
+          <div style={{ marginTop: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '10px', textAlign: 'center' }}>
+            <h2>About 3Mail</h2>
+            <p>
+              3Mail is a decentralized messaging app hosted on the Internet Computer blockchain. This ensures that your messages are secure,
+              immutable, and private.
+            </p>
+            <p>
+              To date, <strong>{totalMessagesSent !== null ? totalMessagesSent : '...'}</strong> messages have been sent through 3Mail.
+            </p>
+            <p>
+              Created by <a href="https://richardhery.com" target="_blank" rel="noopener noreferrer">RichardHery.com</a>
+            </p>
+          </div>
+
           {/* Advertisement Spot */}
           <div style={{ marginTop: '30px', textAlign: 'center' }}>
             <h3>Brought to you by</h3>
             <a href="https://3jorm-yqaaa-aaaam-aaa6a-cai.ic0.app/index-gaming.html" target="_blank" rel="noopener noreferrer">
-              <img src="/images/advertisement.png" alt="Advertisement" style={{ maxWidth: '100%', height: 'auto' }} />
+              <img src="/images/advertisement.png" alt="Advertisement" style={{ maxWidth: '120%', height: 'auto' }} />
             </a>
           </div>
         </div>
