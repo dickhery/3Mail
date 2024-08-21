@@ -78,11 +78,17 @@ After deployment, you can access your app via the provided URL, such as `https:/
 1. **Enter the recipient's Principal ID** in the designated input field.
 2. **Type a subject** and **compose your message**.
 3. Click **Send Message** to submit the message to the backend.
+4. The message count will be updated in real-time to reflect the total number of messages sent through the platform.
 
 ### Viewing Messages
 
 1. Click **Get My Messages** to retrieve and view all messages addressed to your Principal ID.
-2. Messages will be displayed in a scrollable list format.
+2. Messages will be displayed in a scrollable list format, sorted by the most recent timestamp.
+3. You can also view unviewed or sent messages using the respective buttons.
+
+### Real-Time Message Count Display
+
+- The frontend now displays the total number of messages that have been sent through `3Mail`. This count is retrieved from the backend and updated whenever a new message is sent.
 
 ### Environment Variables for Frontend
 
@@ -93,7 +99,7 @@ If you are hosting the frontend separately from DFX, ensure the following adjust
 
 ## Customization and Further Development
 
-You can customize the frontend by editing the React components in `src/custom_mailbox_frontend/src/`. Styles can be adjusted in the `index.scss` file. 
+You can customize the frontend by editing the React components in `src/custom_mailbox_frontend/src/`. Styles can be adjusted in the `index.scss` file.
 
 ### Future Improvements
 
