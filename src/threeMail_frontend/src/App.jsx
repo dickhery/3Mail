@@ -299,10 +299,10 @@ function App() {
             <div style={{ maxHeight: '300px', overflowY: 'scroll', border: '1px solid #ccc', padding: '10px', marginTop: '20px' }}>
               {messages.map((msg, index) => (
                 <div key={index} style={{ marginBottom: '10px', padding: '10px', borderBottom: '1px solid #ccc' }}>
-                  <strong>From:</strong> {msg.sender.toText()}<br />
                   <strong>Subject:</strong> {msg.subject}<br />
                   <strong>Message:</strong> {msg.message}<br />
                   <strong>Timestamp:</strong> {new Date(Number(msg.timestamp / 1000000n)).toLocaleString()}<br />
+                  <strong>From:</strong> {msg.sender.toText()}<br />
                   <button onClick={() => handleMarkAsViewed(msg.subject)} style={{ marginLeft: '10px', cursor: 'pointer' }}>Mark as Viewed</button>
                   <button onClick={() => handleDeleteMessage(msg.subject)} style={{ marginLeft: '10px', cursor: 'pointer' }}>Delete</button>
                 </div>
