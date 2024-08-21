@@ -336,7 +336,7 @@ function App() {
             <p>
               Created by <a href="https://richardhery.com" target="_blank" rel="noopener noreferrer">RichardHery.com</a>
             </p>
-          </div>``
+          </div>
 
           <div style={{ marginTop: '30px', textAlign: 'center' }}>
             <h3>Brought to you by</h3>
