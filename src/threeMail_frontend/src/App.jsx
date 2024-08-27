@@ -205,6 +205,15 @@ function App() {
     }
   };
 
+  const handleCopyPrincipal = () => {
+    navigator.clipboard.writeText(principal).then(() => {
+      setResponse("Principal ID copied to clipboard.");
+      setTimeout(() => setResponse(""), 2000);
+    }).catch(() => {
+      setResponse("Failed to copy Principal ID.");
+    });
+  };
+
   const backgroundStyle = {
     backgroundImage: `url('/images/login-background.jpg')`,
     backgroundSize: 'cover',
@@ -228,22 +237,31 @@ function App() {
   return (
     <main style={isAuthenticated ? mainBackgroundStyle : backgroundStyle}>
       <div style={{ textAlign: 'center' }}>
-        <img src={logo} alt="3Mail Logo" style={{ width: '220px', marginBottom: '20px' }} />
+        <img src={logo} alt="3Mail Logo" style={{ width: '220px', marginBottom: '10px', marginTop: '10px' }} />
         {!isAuthenticated && (
-          <img
-            src={loginButton}
-            alt="Login Button"
-            onClick={handleLogin}
-            style={{ width: '150px', cursor: 'pointer', marginTop: '10px' }}
-          />
+          <>
+            <img
+              src={loginButton}
+              alt="Login Button"
+              onClick={handleLogin}
+              style={{ width: '150px', cursor: 'pointer', marginTop: '10px' }}
+            />
+            <p style={{ fontSize: '12px', marginTop: '20px', color: '#888' }}>
+              Created by <a href="https://richardhery.com" target="_blank" rel="noopener noreferrer" style={{ color: '#888' }}>RichardHery.com</a>
+            </p>
+          </>
         )}
       </div>
       {isAuthenticated && (
         <div>
-          <button onClick={handleLogout} style={{ padding: '10px 20px', cursor: 'pointer' }}>
+          <button onClick={handleLogout} style={{ padding: '10px 20px', cursor: 'pointer', marginBottom: '20px' }}>
             Logout
-          </button>
-          <p><strong>Your 3Mail Address </strong><br /> {principal}</p>
+          </button>          
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', marginBottom: '10px', flexDirection: 'column' }}>
+            <p><strong>Your 3Mail Address:</strong></p>
+            <p>{principal}</p>
+            <button onClick={handleCopyPrincipal} style={{ marginTop: '10px', padding: '5px', fontSize: '12px', cursor: 'pointer' }}>Copy Address</button>
+          </div>
           <div style={{ marginTop: '20px' }}>
             <h2>Send a Message</h2>
             <form onSubmit={handleSendMessage} style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
