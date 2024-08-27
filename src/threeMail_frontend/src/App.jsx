@@ -214,6 +214,7 @@ function App() {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'column',
   };
 
   const mainBackgroundStyle = {
@@ -226,45 +227,53 @@ function App() {
 
   return (
     <main style={isAuthenticated ? mainBackgroundStyle : backgroundStyle}>
-      <img src={logo} alt="3Mail Logo" style={{ width: '150px', marginBottom: '20px' }} />
-      {!isAuthenticated ? (
-        <img src={loginButton} alt="Login Button" onClick={handleLogin} style={{ width: '200px', cursor: 'pointer', display: 'block', margin: '0 auto' }} />
-      ) : (
+      <div style={{ textAlign: 'center' }}>
+        <img src={logo} alt="3Mail Logo" style={{ width: '220px', marginBottom: '20px' }} />
+        {!isAuthenticated && (
+          <img
+            src={loginButton}
+            alt="Login Button"
+            onClick={handleLogin}
+            style={{ width: '150px', cursor: 'pointer', marginTop: '10px' }}
+          />
+        )}
+      </div>
+      {isAuthenticated && (
         <div>
-          <p><strong>Your 3Mail Address </strong><br /> {principal}</p>
           <button onClick={handleLogout} style={{ padding: '10px 20px', cursor: 'pointer' }}>
             Logout
           </button>
+          <p><strong>Your 3Mail Address </strong><br /> {principal}</p>
           <div style={{ marginTop: '20px' }}>
             <h2>Send a Message</h2>
-            <form onSubmit={handleSendMessage} style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '10px', paddingLeft: '20px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+            <form onSubmit={handleSendMessage} style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'center' }}>
                 <label>Recipient PID:</label>
                 <input
                   type="text"
                   value={recipient}
                   onChange={(e) => setRecipient(e.target.value)}
-                  style={{ padding: '5px', width: '300px' }}
+                  style={{ padding: '5px', width: '300px', textAlign: 'center' }}
                 />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'center' }}>
                 <label>Subject:</label>
                 <input
                   type="text"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  style={{ padding: '5px', width: '300px' }}
+                  style={{ padding: '5px', width: '300px', textAlign: 'center' }}
                 />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'center' }}>
                 <label>Message:</label>
                 <textarea
                   value={messageBody}
                   onChange={(e) => setMessageBody(e.target.value)}
-                  style={{ padding: '5px', width: '300px', height: '100px' }}
+                  style={{ padding: '5px', width: '300px', height: '100px', textAlign: 'center' }}
                 />
               </div>
-              <button type="submit" style={{ padding: '10px 20px', cursor: 'pointer', alignSelf: 'flex-start' }}>Send Message</button>
+              <button type="submit" style={{ padding: '10px 20px', cursor: 'pointer', alignSelf: 'center' }}>Send Message</button>
             </form>
             {response && <p>{response}</p>}
           </div>
@@ -288,15 +297,15 @@ function App() {
           </div>
 
           <form onSubmit={handleSearchBySubject} style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'center' }}>
               <label>Search Messages by Subject:</label>
               <input
                 type="text"
                 value={searchSubject}
                 onChange={(e) => setSearchSubject(e.target.value)}
-                style={{ padding: '5px', width: '300px' }}
+                style={{ padding: '5px', width: '300px', textAlign: 'center' }}
               />
-              <button type="submit" style={{ padding: '10px 20px', cursor: 'pointer', marginTop: '10px', alignSelf: 'flex-start' }}>Search</button>
+              <button type="submit" style={{ padding: '10px 20px', cursor: 'pointer', marginTop: '10px', alignSelf: 'center' }}>Search</button>
             </div>
           </form>
 
