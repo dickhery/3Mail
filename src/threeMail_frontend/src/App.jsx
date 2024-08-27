@@ -3,6 +3,8 @@ import { AuthClient } from '@dfinity/auth-client';
 import { Actor, HttpAgent } from '@dfinity/agent';
 import { Principal } from '@dfinity/principal';
 import { idlFactory as threeMail_backend_idl, canisterId as threeMail_backend_id } from 'declarations/threeMail_backend';
+import logo from '../public/images/3mail-logo.png';
+import loginButton from '../public/images/login-button.png';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -18,7 +20,6 @@ function App() {
   const [totalMessagesSent, setTotalMessagesSent] = useState(null);
   const [searchSubject, setSearchSubject] = useState('');
 
-  // Initialize the auth client and fetch the total messages sent
   useEffect(() => {
     async function initAuth() {
       const client = await AuthClient.create();
@@ -36,7 +37,6 @@ function App() {
         });
         setThreeMailActor(actor);
 
-        // Fetch the total number of messages sent
         try {
           const totalSent = await actor.getTotalMessagesSent();
           console.log('Total Messages Sent:', totalSent);
@@ -100,7 +100,6 @@ function App() {
         setSubject('');
         setMessageBody('');
 
-        // Update the total messages sent
         const totalSent = await threeMailActor.getTotalMessagesSent();
         console.log('Total Messages Sent After Sending:', totalSent);
         setTotalMessagesSent(totalSent.toString());
@@ -227,11 +226,9 @@ function App() {
 
   return (
     <main style={isAuthenticated ? mainBackgroundStyle : backgroundStyle}>
-      <h1>3Mail</h1>
+      <img src={logo} alt="3Mail Logo" style={{ width: '150px', marginBottom: '20px' }} />
       {!isAuthenticated ? (
-        <button onClick={handleLogin} style={{ padding: '10px 20px', cursor: 'pointer' }}>
-          Log in with Internet Identity
-        </button>
+        <img src={loginButton} alt="Login Button" onClick={handleLogin} style={{ width: '200px', cursor: 'pointer', display: 'block', margin: '0 auto' }} />
       ) : (
         <div>
           <p><strong>Your 3Mail Address </strong><br /> {principal}</p>
