@@ -306,6 +306,8 @@ function App() {
             <button onClick={handleGetSentMessages} style={{ padding: '10px 20px', cursor: 'pointer' }}>
               Get Sent Messages
             </button>
+          </div>
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', justifyContent: 'center' }}>
             <button onClick={handleGetTotalMessages} style={{ padding: '10px 20px', cursor: 'pointer' }}>
               Check Total Messages
             </button>
