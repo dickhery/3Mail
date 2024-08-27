@@ -9,6 +9,7 @@ body {
   align-items: center;
   min-height: 100vh;
   text-align: center;
+  overflow-x: hidden;
 }
 
 img {
@@ -26,7 +27,6 @@ form {
   max-width: 300px;
   margin: 0 auto;
 }
-
 
 button[type="submit"] {
   padding: 5px 20px;
@@ -93,6 +93,7 @@ textarea, input[type="text"] {
   border-radius: 5px;
   width: 100%;
   max-width: 300px;
+  font-size: 1rem; /* Set input text size */
 }
 
 textarea {

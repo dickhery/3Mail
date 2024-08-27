@@ -296,7 +296,7 @@ function App() {
             {response && <p>{response}</p>}
           </div>
 
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', justifyContent: 'center' }}>
             <button onClick={handleGetMessages} style={{ padding: '10px 20px', cursor: 'pointer' }}>
               Get My Messages
             </button>
