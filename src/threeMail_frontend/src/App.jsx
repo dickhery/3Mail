@@ -450,9 +450,9 @@ function App() {
           </div>
 
           <div style={{ marginTop: '30px', textAlign: 'center' }}>
-            <h3>Brought to you by</h3>
-            <a href="https://3jorm-yqaaa-aaaam-aaa6a-cai.ic0.app/index-gaming.html" target="_blank" rel="noopener noreferrer">
-              <img src="/images/advertisement.png" alt="Advertisement" style={{ maxWidth: '120%', height: 'auto' }} />
+            <h3>3Mail Chat Room</h3>
+            <a href="https://bnze3-uyaaa-aaaam-adblq-cai.icp0.io/" target="_blank" rel="noopener noreferrer">
+              <img src="/images/advertisement.png" alt="Advertisement" style={{ maxWidth: '80%', height: 'auto' }} />
             </a>
           </div>
         </div>
