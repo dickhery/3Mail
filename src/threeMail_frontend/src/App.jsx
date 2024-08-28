@@ -21,7 +21,7 @@ function App() {
   const [newUsername, setNewUsername] = useState('');
   const [hasCustomAddress, setHasCustomAddress] = useState(false);
   const [showCreateUsername, setShowCreateUsername] = useState(false);
-  const [searchSubject, setSearchSubject] = useState('');  // Declare searchSubject in state
+  const [searchSubject, setSearchSubject] = useState('');
 
   useEffect(() => {
     async function initAuth() {
@@ -42,18 +42,18 @@ function App() {
 
         try {
           const totalSent = await actor.getTotalMessagesSent();
-          console.log('Total Messages Sent:', totalSent);
           setTotalMessagesSent(totalSent.toString());
 
-          const storedUsername = await actor.getUsername(Principal.fromText(identity.getPrincipal().toText()));
-          if (storedUsername && storedUsername.length > 0) {
-            setUsername(storedUsername[0]);
+          const storedUsername = await actor.getCustomAddress(Principal.fromText(identity.getPrincipal().toText()));
+          if (storedUsername && storedUsername.customAddress) {
+            setUsername(storedUsername.customAddress);
             setHasCustomAddress(true);
           } else {
+            setUsername(identity.getPrincipal().toText());
             setShowCreateUsername(true);
           }
         } catch (error) {
-          console.error('Failed to fetch total messages sent or username:', error);
+          console.error('Error initializing user data:', error);
           setTotalMessagesSent("0");
         }
       }
@@ -63,6 +63,7 @@ function App() {
 
   const handleLogin = async () => {
     if (authClient) {
+      resetTextFields();
       await authClient.login({
         identityProvider: "https://identity.ic0.app",
         onSuccess: async () => {
@@ -79,18 +80,18 @@ function App() {
 
           try {
             const totalSent = await actor.getTotalMessagesSent();
-            console.log('Total Messages Sent:', totalSent);
             setTotalMessagesSent(totalSent.toString());
 
-            const storedUsername = await actor.getUsername(Principal.fromText(identity.getPrincipal().toText()));
-            if (storedUsername && storedUsername.length > 0) {
-              setUsername(storedUsername[0]);
+            const storedUsername = await actor.getCustomAddress(Principal.fromText(identity.getPrincipal().toText()));
+            if (storedUsername && storedUsername.customAddress) {
+              setUsername(storedUsername.customAddress);
               setHasCustomAddress(true);
             } else {
+              setUsername(identity.getPrincipal().toText());
               setShowCreateUsername(true);
             }
           } catch (error) {
-            console.error('Failed to fetch total messages sent or username:', error);
+            console.error('Error fetching user data after login:', error);
             setTotalMessagesSent("0");
           }
         }
@@ -101,6 +102,7 @@ function App() {
   const handleLogout = async () => {
     if (authClient) {
       await authClient.logout();
+      resetTextFields();
       setIsAuthenticated(false);
       setPrincipal('');
       setMessages([]);
@@ -112,42 +114,53 @@ function App() {
     event.preventDefault();
     try {
       if (threeMailActor) {
-        const recipientPrincipal = await resolveRecipient(recipient);
-        const result = await threeMailActor.submitMessage(recipientPrincipal, subject, messageBody);
-        setResponse(result);
-        setRecipient('');
-        setSubject('');
-        setMessageBody('');
+        const resolvedRecipient = await resolveRecipient(recipient);
+        if (resolvedRecipient) {
+          const result = await threeMailActor.submitMessage(resolvedRecipient, subject, messageBody);
+          setResponse(result);
+          resetTextFields();
 
-        const totalSent = await threeMailActor.getTotalMessagesSent();
-        console.log('Total Messages Sent After Sending:', totalSent);
-        setTotalMessagesSent(totalSent.toString());
+          const totalSent = await threeMailActor.getTotalMessagesSent();
+          setTotalMessagesSent(totalSent.toString());
+        } else {
+          setResponse("Recipient is not a valid Principal ID or custom address.");
+        }
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      setResponse("Failed to send message.");
+      setResponse("Failed to send message. Check the console for more details.");
     }
   };
 
   const resolveRecipient = async (input) => {
     try {
-      if (threeMailActor) {
-        const customAddressPrincipal = await threeMailActor.resolveCustomAddress(input);
-        if (customAddressPrincipal) {
-          return Principal.fromText(customAddressPrincipal);
+      const principal = Principal.fromText(input);
+      console.log("Recipient is a valid Principal ID:", principal.toText());
+      return principal;
+    } catch (e) {
+      console.log("Input is not a valid Principal ID, attempting to resolve as a custom address.");
+
+      try {
+        const customAddressPrincipalOpt = await threeMailActor.resolveCustomAddress(input.toLowerCase());
+        if (customAddressPrincipalOpt && customAddressPrincipalOpt.length > 0) {
+          const customAddressPrincipal = customAddressPrincipalOpt[0];
+          console.log("Custom address resolved to Principal ID:", customAddressPrincipal.toText());
+          return Principal.fromText(customAddressPrincipal.toText());
+        } else {
+          console.error("Resolved custom address is not a valid Principal.");
+          return null;
         }
+      } catch (error) {
+        console.error("Failed to resolve custom address:", error);
+        return null;
       }
-      return Principal.fromText(input);
-    } catch (error) {
-      console.error("Failed to resolve recipient:", error);
-      return Principal.fromText(input); // Default to PID if resolution fails
     }
   };
 
   const handleCreateUsername = async () => {
     if (newUsername.trim() !== '') {
       try {
-        const success = await threeMailActor.setUsername(newUsername);
+        const success = await threeMailActor.setUsername(newUsername, Principal.fromText(principal));
         if (success) {
           setUsername(newUsername);
           setHasCustomAddress(true);
@@ -256,12 +269,23 @@ function App() {
   };
 
   const handleCopyPrincipal = () => {
-    navigator.clipboard.writeText(principal).then(() => {
-      setResponse("Principal ID copied to clipboard.");
-      setTimeout(() => setResponse(""), 2000);
-    }).catch(() => {
-      setResponse("Failed to copy Principal ID.");
-    });
+    try {
+      navigator.clipboard.writeText(hasCustomAddress ? username : principal).then(() => {
+        setResponse("Address copied to clipboard.");
+        setTimeout(() => setResponse(""), 2000);
+      });
+    } catch (error) {
+      console.error("Clipboard API error:", error);
+      setResponse("Failed to copy address. Check clipboard permissions.");
+    }
+  };
+
+  const resetTextFields = () => {
+    setRecipient('');
+    setSubject('');
+    setMessageBody('');
+    setNewUsername('');
+    setSearchSubject('');
   };
 
   const backgroundStyle = {
@@ -306,10 +330,13 @@ function App() {
         <div>
           <button onClick={handleLogout} style={{ padding: '10px 20px', cursor: 'pointer', marginBottom: '20px' }}>
             Logout
-          </button>          
+          </button>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', marginBottom: '10px', flexDirection: 'column' }}>
             <p><strong>Your 3Mail Address:</strong></p>
-            <p>{username || principal}</p>
+            <p>{hasCustomAddress ? username : principal}</p>
+            <button onClick={handleCopyPrincipal} style={{ marginTop: '10px', padding: '5px', fontSize: '12px', cursor: 'pointer' }}>
+              Copy Address
+            </button>
             {hasCustomAddress ? (
               <button onClick={() => setShowCreateUsername(true)} style={{ marginTop: '10px', padding: '5px', fontSize: '12px', cursor: 'pointer' }}>
                 Change Custom Address
