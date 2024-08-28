@@ -2,11 +2,13 @@ import Array "mo:base/Array";
 import Time "mo:base/Time";
 import Nat "mo:base/Nat";
 import Principal "mo:base/Principal";
+import Text "mo:base/Text";
 
 actor class Mailbox() = this {
   type Message = {
     sender: Principal;
     recipient: Principal;
+    senderCustomAddress: ?Text;
     subject: Text;
     message: Text;
     timestamp: Time.Time;
@@ -15,13 +17,16 @@ actor class Mailbox() = this {
 
   stable var messages: [Message] = [];
   stable var totalMessagesSent: Nat = 0;
+  stable var usernames: [(Principal, Text)] = [];
 
   public shared(msg) func submitMessage(recipient: Principal, subject: Text, message: Text) : async Text {
     let sender = msg.caller;
+    let senderCustomAddress = await getUsername(sender);  // Ensure we await the result
     let timestamp = Time.now();
     let newMessage = {
       sender = sender;
       recipient = recipient;
+      senderCustomAddress = senderCustomAddress;
       subject = subject;
       message = message;
       timestamp = timestamp;
@@ -119,6 +124,47 @@ actor class Mailbox() = this {
       m.subject == subject and (m.sender == caller or m.recipient == caller)
     });
     return sortMessagesByTimestamp(results);
+  };
+
+  public shared(msg) func setUsername(newUsername: Text) : async Bool {
+    let caller: Principal = msg.caller;
+    let lowerUsername = Text.toLowercase(newUsername);
+
+    // Check if username already exists (case insensitive)
+    let usernameExists = Array.find<Text>(
+      Array.map<(Principal, Text), Text>(usernames, func(entry) { Text.toLowercase(entry.1) }),
+      func(name) { name == lowerUsername }
+    ) != null;
+
+    if (usernameExists) {
+      return false;
+    } else {
+      // Remove any existing username associated with the caller
+      usernames := Array.filter(usernames, func(entry: (Principal, Text)) : Bool { entry.0 != caller });
+      usernames := Array.append(usernames, [(caller, newUsername)]);
+      return true;
+    }
+  };
+
+  public query func getUsername(userId: Principal) : async ?Text {
+    let result = Array.find<(Principal, Text)>(usernames, func(entry: (Principal, Text)) : Bool {
+      entry.0 == userId
+    });
+    return switch result {
+      case (?entry) ?entry.1;
+      case null null;
+    };
+  };
+
+  public query func resolveCustomAddress(customAddress: Text) : async ?Principal {
+    let lowerCustomAddress = Text.toLowercase(customAddress);
+    let result = Array.find<(Principal, Text)>(usernames, func(entry: (Principal, Text)) : Bool {
+      Text.toLowercase(entry.1) == lowerCustomAddress
+    });
+    return switch result {
+      case (?entry) ?entry.0;
+      case null null;
+    };
   };
 
   // Custom sorting function with custom order type

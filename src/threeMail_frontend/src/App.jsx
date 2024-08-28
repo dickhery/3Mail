@@ -16,9 +16,12 @@ function App() {
   const [messageBody, setMessageBody] = useState('');
   const [response, setResponse] = useState('');
   const [threeMailActor, setThreeMailActor] = useState(null);
-  const [totalMessages, setTotalMessages] = useState(0);
   const [totalMessagesSent, setTotalMessagesSent] = useState(null);
-  const [searchSubject, setSearchSubject] = useState('');
+  const [username, setUsername] = useState('');
+  const [newUsername, setNewUsername] = useState('');
+  const [hasCustomAddress, setHasCustomAddress] = useState(false);
+  const [showCreateUsername, setShowCreateUsername] = useState(false);
+  const [searchSubject, setSearchSubject] = useState('');  // Declare searchSubject in state
 
   useEffect(() => {
     async function initAuth() {
@@ -41,8 +44,16 @@ function App() {
           const totalSent = await actor.getTotalMessagesSent();
           console.log('Total Messages Sent:', totalSent);
           setTotalMessagesSent(totalSent.toString());
+
+          const storedUsername = await actor.getUsername(Principal.fromText(identity.getPrincipal().toText()));
+          if (storedUsername && storedUsername.length > 0) {
+            setUsername(storedUsername[0]);
+            setHasCustomAddress(true);
+          } else {
+            setShowCreateUsername(true);
+          }
         } catch (error) {
-          console.error('Failed to fetch total messages sent:', error);
+          console.error('Failed to fetch total messages sent or username:', error);
           setTotalMessagesSent("0");
         }
       }
@@ -70,8 +81,16 @@ function App() {
             const totalSent = await actor.getTotalMessagesSent();
             console.log('Total Messages Sent:', totalSent);
             setTotalMessagesSent(totalSent.toString());
+
+            const storedUsername = await actor.getUsername(Principal.fromText(identity.getPrincipal().toText()));
+            if (storedUsername && storedUsername.length > 0) {
+              setUsername(storedUsername[0]);
+              setHasCustomAddress(true);
+            } else {
+              setShowCreateUsername(true);
+            }
           } catch (error) {
-            console.error('Failed to fetch total messages sent:', error);
+            console.error('Failed to fetch total messages sent or username:', error);
             setTotalMessagesSent("0");
           }
         }
@@ -93,7 +112,7 @@ function App() {
     event.preventDefault();
     try {
       if (threeMailActor) {
-        const recipientPrincipal = Principal.fromText(recipient);
+        const recipientPrincipal = await resolveRecipient(recipient);
         const result = await threeMailActor.submitMessage(recipientPrincipal, subject, messageBody);
         setResponse(result);
         setRecipient('');
@@ -107,6 +126,38 @@ function App() {
     } catch (error) {
       console.error("Error sending message:", error);
       setResponse("Failed to send message.");
+    }
+  };
+
+  const resolveRecipient = async (input) => {
+    try {
+      if (threeMailActor) {
+        const customAddressPrincipal = await threeMailActor.resolveCustomAddress(input);
+        if (customAddressPrincipal) {
+          return Principal.fromText(customAddressPrincipal);
+        }
+      }
+      return Principal.fromText(input);
+    } catch (error) {
+      console.error("Failed to resolve recipient:", error);
+      return Principal.fromText(input); // Default to PID if resolution fails
+    }
+  };
+
+  const handleCreateUsername = async () => {
+    if (newUsername.trim() !== '') {
+      try {
+        const success = await threeMailActor.setUsername(newUsername);
+        if (success) {
+          setUsername(newUsername);
+          setHasCustomAddress(true);
+          setShowCreateUsername(false);
+        } else {
+          alert('Username already exists. Please choose another one.');
+        }
+      } catch (error) {
+        console.error('Failed to create username:', error);
+      }
     }
   };
 
@@ -171,7 +222,6 @@ function App() {
     try {
       if (threeMailActor) {
         const total = await threeMailActor.getTotalMessages();
-        setTotalMessages(total);
         setResponse(`Total messages received: ${total}`);
       }
     } catch (error) {
@@ -259,14 +309,36 @@ function App() {
           </button>          
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', marginBottom: '10px', flexDirection: 'column' }}>
             <p><strong>Your 3Mail Address:</strong></p>
-            <p>{principal}</p>
-            <button onClick={handleCopyPrincipal} style={{ marginTop: '10px', padding: '5px', fontSize: '12px', cursor: 'pointer' }}>Copy Address</button>
+            <p>{username || principal}</p>
+            {hasCustomAddress ? (
+              <button onClick={() => setShowCreateUsername(true)} style={{ marginTop: '10px', padding: '5px', fontSize: '12px', cursor: 'pointer' }}>
+                Change Custom Address
+              </button>
+            ) : (
+              <button onClick={() => setShowCreateUsername(true)} style={{ marginTop: '10px', padding: '5px', fontSize: '12px', cursor: 'pointer' }}>
+                Create Custom Address
+              </button>
+            )}
           </div>
+
+          {showCreateUsername && (
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <input
+                type="text"
+                placeholder="Enter Custom Address"
+                value={newUsername}
+                onChange={(e) => setNewUsername(e.target.value)}
+                style={{ padding: '10px', width: '80%', textAlign: 'center', marginBottom: '10px' }}
+              />
+              <button onClick={handleCreateUsername} style={{ padding: '10px 20px', cursor: 'pointer' }}>Save Custom Address</button>
+            </div>
+          )}
+
           <div style={{ marginTop: '20px' }}>
             <h2>Send a Message</h2>
             <form onSubmit={handleSendMessage} style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'center' }}>
-                <label>Recipient PID:</label>
+                <label>Recipient PID or Custom Address:</label>
                 <input
                   type="text"
                   value={recipient}
@@ -307,6 +379,7 @@ function App() {
               Get Sent Messages
             </button>
           </div>
+
           <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', justifyContent: 'center' }}>
             <button onClick={handleGetTotalMessages} style={{ padding: '10px 20px', cursor: 'pointer' }}>
               Check Total Messages
@@ -336,7 +409,7 @@ function App() {
                   <strong>Subject:</strong> {msg.subject}<br />
                   <strong>Message:</strong> {msg.message}<br />
                   <strong>Timestamp:</strong> {new Date(Number(msg.timestamp / 1000000n)).toLocaleString()}<br />
-                  <strong>From:</strong> {msg.sender.toText()}<br />
+                  <strong>From:</strong> {msg.senderCustomAddress || msg.sender.toText()}<br />
                   {msg.recipient ? (
                     <>
                       <strong>To:</strong> {msg.recipient.toText()}<br />
