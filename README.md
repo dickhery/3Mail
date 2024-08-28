@@ -73,7 +73,7 @@ To test and develop `3Mail` locally, follow these steps:
    This will start a server at `http://localhost:8080`, which will proxy API requests to the replica running at port 4943.
 
 ### Important Note:
-Before deploying the project, replace the canisters in the `canister_ids.json` file with canisters that you control. Failure to do so may result in deployment issues or loss of control over the canisters.
+Before deploying the project, replace the canisters in the `canister_ids.json` file with canisters that you control. Failure to do so may result in deployment issues.
 
 ## Deploying to the Internet Computer Mainnet
 
@@ -89,7 +89,7 @@ After deployment, you can access your app via the provided URL, such as `https:/
 
 ### Logging In with Internet Identity
 
-1. **Create an Internet Identity (II)**: If you don’t have one, visit [https://identity.ic0.app](https://identity.ic0.app) and follow the instructions to create an identity.
+1. **Create an Internet Identity (II)**: If you don’t have one, follow the propts to create one after pressing the Login or Join button which takes everyone to [https://identity.ic0.app](https://identity.ic0.app) then follow the instructions to create an identity.
 2. **Log in to `3Mail`**: Click the login button on the app’s homepage. You will be redirected to the Internet Identity authentication page.
 3. **Return to the app**: After successful authentication, you’ll be redirected back to `3Mail`, where you’ll see your custom address or Principal ID displayed.
 
