@@ -7,19 +7,20 @@ This README will guide you through setting up, deploying, and using the `3Mail` 
 
 ## Project Overview
 
-`3Mail` includes a backend canister written in Motoko, handling message storage and retrieval, and a React-based frontend for user interaction. The frontend allows users to submit messages, view received messages, and interact with the decentralized backend.
+`3Mail` includes a backend canister written in Motoko, handling message storage and retrieval, and a React-based frontend for user interaction. The frontend allows users to submit messages, view received messages, and interact with the decentralized backend. Users can log in using Internet Identity, create custom addresses, and manage their messages with a clean and simple interface.
 
-To learn more about the technologies used in this project, see the following documentation:
+### Key Features:
 
-- [Internet Computer Quick Start](https://internetcomputer.org/docs/current/developer-docs/setup/deploy-locally)
-- [DFX SDK Developer Tools](https://internetcomputer.org/docs/current/developer-docs/setup/install)
-- [Motoko Programming Language Guide](https://internetcomputer.org/docs/current/motoko/main/motoko)
-- [React Documentation](https://reactjs.org/docs/getting-started.html)
+- **Decentralized Messaging**: Messages are stored on-chain, ensuring privacy and security.
+- **Internet Identity Integration**: Users can log in using their Internet Identity (II) for seamless and secure access.
+- **Custom Addresses**: Users can create and manage custom addresses associated with their Internet Identity.
+- **Real-Time Notifications**: The app provides instant feedback on message submission and other actions.
+- **Message Management**: Users can send, receive, view, and delete messages with ease.
 
 ## Project Structure
 
 ```plaintext
-custom_mailbox/
+3Mail/
 ├── src/
 │   ├── threeMail_backend/
 │   │   └── main.mo    # The backend canister code (written in Motoko)
@@ -37,29 +38,42 @@ custom_mailbox/
 
 To test and develop `3Mail` locally, follow these steps:
 
-1. **Start the Internet Computer local replica**:
+1. **Install necessary dependencies**:
+   ```bash
+   npm install
+   ```
+
+2. **Generate Candid interfaces**:
+   ```bash
+   dfx generate
+   ```
+
+3. **Create canisters**:
+   ```bash
+   dfx canister create --all
+   ```
+
+4. **Start the Internet Computer local replica**:
    ```bash
    dfx start --background
    ```
 
-2. **Deploy the canisters to the local replica**:
+5. **Deploy the canisters to the local replica**:
    ```bash
    dfx deploy
    ```
 
    Once deployed, your application will be accessible at `http://localhost:4943?canisterId={asset_canister_id}`.
 
-3. **Generate the Candid interface** (if you make changes to the backend):
-   ```bash
-   npm run generate
-   ```
-
-4. **Start the frontend development server**:
+6. **Start the frontend development server**:
    ```bash
    npm start
    ```
 
    This will start a server at `http://localhost:8080`, which will proxy API requests to the replica running at port 4943.
+
+### Important Note:
+Before deploying the project, replace the canisters in the `canister_ids.json` file with canisters that you control. Failure to do so may result in deployment issues or loss of control over the canisters.
 
 ## Deploying to the Internet Computer Mainnet
 
@@ -73,18 +87,32 @@ After deployment, you can access your app via the provided URL, such as `https:/
 
 ## Using 3Mail
 
+### Logging In with Internet Identity
+
+1. **Create an Internet Identity (II)**: If you don’t have one, visit [https://identity.ic0.app](https://identity.ic0.app) and follow the instructions to create an identity.
+2. **Log in to `3Mail`**: Click the login button on the app’s homepage. You will be redirected to the Internet Identity authentication page.
+3. **Return to the app**: After successful authentication, you’ll be redirected back to `3Mail`, where you’ll see your custom address or Principal ID displayed.
+
+### Creating and Managing Custom Addresses
+
+1. **Create a Custom Address**: After logging in, if you don’t already have a custom address, you can create one by entering it in the provided input field and clicking the "Save Custom Address" button.
+2. **Change Custom Address**: If you have a custom address, you can change it by clicking the "Change Custom Address" button, entering a new address, and saving it.
+3. **View Your Custom Address**: Your custom address is displayed on the home screen once you log in.
+
 ### Sending a Message
 
-1. **Enter the recipient's Principal ID** in the designated input field.
+1. **Enter the recipient's Principal ID or Custom Address** in the designated input field.
 2. **Type a subject** and **compose your message**.
 3. Click **Send Message** to submit the message to the backend.
-4. The message count will be updated in real-time to reflect the total number of messages sent through the platform.
+4. A notification will confirm whether the message was sent successfully or if there was an error.
 
-### Viewing Messages
+### Viewing and Managing Messages
 
-1. Click **Get My Messages** to retrieve and view all messages addressed to your Principal ID.
-2. Messages will be displayed in a scrollable list format, sorted by the most recent timestamp.
-3. You can also view unviewed or sent messages using the respective buttons.
+1. **View Messages**: Click **Get My Messages** to retrieve and view all messages addressed to your Principal ID or custom address.
+2. **View Unviewed Messages**: Click **Get Unviewed Messages** to see only the messages you haven’t read yet.
+3. **View Sent Messages**: Click **Get Sent Messages** to see the messages you have sent.
+4. **Delete Messages**: You can delete individual messages or all messages by using the respective buttons.
+5. **Mark Messages as Viewed**: You can mark a message as viewed, which will update its status.
 
 ### Real-Time Message Count Display
 
