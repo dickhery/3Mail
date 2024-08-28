@@ -3,12 +3,14 @@ import Time "mo:base/Time";
 import Nat "mo:base/Nat";
 import Principal "mo:base/Principal";
 import Text "mo:base/Text";
+import Option "mo:base/Option";
 
 actor class Mailbox() = this {
   type Message = {
     sender : Principal;
-    recipient : Principal;
     senderCustomAddress : Text;
+    recipient : Principal;
+    recipientCustomAddress : Text;
     subject : Text;
     message : Text;
     timestamp : Time.Time;
@@ -17,47 +19,31 @@ actor class Mailbox() = this {
 
   stable var messages : [Message] = [];
   stable var totalMessagesSent : Nat = 0;
-  stable var usernames : [(Principal, Text, Text)] = [];
+  stable var usernames : [(Principal, Text)] = [];
 
   public shared (msg) func submitMessage(recipient : Principal, subject : Text, message : Text) : async Text {
     let sender = msg.caller;
-    let senderCustomAddress : Text = switch (await getCustomAddress(sender)) {
-      case (?customAddress) customAddress.customAddress;
-      case null Principal.toText(sender);  // Fallback to PID if no custom address
-    };
+    let senderCustomAddress = await getCustomAddressOrPID(sender);
+    let recipientCustomAddress = await getCustomAddressOrPID(recipient);
     let timestamp = Time.now();
     let newMessage = {
       sender = sender;
-      recipient = recipient;
       senderCustomAddress = senderCustomAddress;
+      recipient = recipient;
+      recipientCustomAddress = recipientCustomAddress;
       subject = subject;
       message = message;
       timestamp = timestamp;
       viewed = false;
     };
     messages := Array.append<Message>(messages, [newMessage]);
-    totalMessagesSent += 1;
+    totalMessagesSent := totalMessagesSent + 1; // Avoid potential trap by ensuring safe addition
     return "Message submitted successfully.";
-  };
-
-  public shared (msg) func getTotalMessages() : async Nat {
-    let caller = msg.caller;
-    let receivedMessages = Array.filter<Message>(
-      messages,
-      func(m) : Bool {
-        m.recipient == caller;
-      },
-    );
-    return Array.size<Message>(receivedMessages);
-  };
-
-  public shared (msg) func getTotalMessagesSent() : async Nat {
-    return totalMessagesSent;
   };
 
   public shared (msg) func getMyMessages() : async [Message] {
     let caller = msg.caller;
-    let results = Array.filter<Message>(
+    let results : [Message] = Array.filter<Message>(
       messages,
       func(m) : Bool {
         m.recipient == caller;
@@ -68,10 +54,10 @@ actor class Mailbox() = this {
 
   public shared (msg) func getUnviewedMessages() : async [Message] {
     let caller = msg.caller;
-    let results = Array.filter<Message>(
+    let results : [Message] = Array.filter<Message>(
       messages,
       func(m) : Bool {
-        not m.viewed and m.recipient == caller
+        not m.viewed and m.recipient == caller;
       },
     );
     return sortMessagesByTimestamp(results);
@@ -79,7 +65,7 @@ actor class Mailbox() = this {
 
   public shared (msg) func getSentMessages() : async [Message] {
     let caller = msg.caller;
-    let results = Array.filter<Message>(
+    let results : [Message] = Array.filter<Message>(
       messages,
       func(m) : Bool {
         m.sender == caller;
@@ -88,13 +74,13 @@ actor class Mailbox() = this {
     return sortMessagesByTimestamp(results);
   };
 
-  public shared (msg) func markAsViewed(subject : Text) : async Text {
+  public shared (msg) func markAsViewed(timestamp : Time.Time) : async Text {
     let caller = msg.caller;
     var found = false;
     messages := Array.map<Message, Message>(
       messages,
       func(m) : Message {
-        if (m.subject == subject and m.recipient == caller) {
+        if (m.timestamp == timestamp and m.recipient == caller) {
           found := true;
           { m with viewed = true };
         } else {
@@ -109,13 +95,13 @@ actor class Mailbox() = this {
     }
   };
 
-  public shared (msg) func deleteMessage(subject : Text) : async Text {
+  public shared (msg) func deleteMessage(timestamp : Time.Time) : async Text {
     let caller = msg.caller;
-    let initialLength = Array.size<Message>(messages);
+    let initialLength : Nat = Array.size<Message>(messages);
     messages := Array.filter<Message>(
       messages,
       func(m) : Bool {
-        not (m.subject == subject and m.recipient == caller);
+        not (m.timestamp == timestamp and (m.recipient == caller or m.sender == caller));
       },
     );
     if (Array.size<Message>(messages) < initialLength) {
@@ -127,14 +113,14 @@ actor class Mailbox() = this {
 
   public shared (msg) func deleteAllMessages() : async Text {
     let caller = msg.caller;
-    let initialLength = Array.size<Message>(messages);
+    let initialLength : Nat = Array.size<Message>(messages);
     messages := Array.filter<Message>(
       messages,
       func(m) : Bool {
-        m.recipient != caller;
+        m.recipient != caller and m.sender != caller;
       },
     );
-    let deletedCount = initialLength - Array.size<Message>(messages);
+    let deletedCount : Nat = initialLength - Array.size<Message>(messages);
     if (deletedCount > 0) {
       return "All messages deleted successfully.";
     } else {
@@ -144,60 +130,92 @@ actor class Mailbox() = this {
 
   public shared (msg) func searchBySubject(subject : Text) : async [Message] {
     let caller = msg.caller;
-    let results = Array.filter<Message>(
+    let results : [Message] = Array.filter<Message>(
       messages,
       func(m) : Bool {
-        m.subject == subject and (m.sender == caller or m.recipient == caller)
+        m.subject == subject and (m.sender == caller or m.recipient == caller);
       },
     );
     return sortMessagesByTimestamp(results);
   };
 
+  public shared (msg) func getTotalMessages() : async Nat {
+    let caller = msg.caller;
+    let receivedMessages : [Message] = Array.filter<Message>(
+      messages,
+      func(m) : Bool {
+        m.recipient == caller;
+      },
+    );
+    return Array.size<Message>(receivedMessages);
+  };
+
+  public shared (msg) func getTotalMessagesSent() : async Nat {
+    return totalMessagesSent;
+  };
+
   public shared (msg) func setUsername(newUsername : Text) : async Bool {
     let caller : Principal = msg.caller;
-    let lowerUsername = Text.toLowercase(newUsername);
+    let lowerUsername : Text = Text.toLowercase(newUsername);
 
-    let usernameExists = Array.find<Text>(
-      Array.map<(Principal, Text, Text), Text>(usernames, func(entry) { Text.toLowercase(entry.1) }),
-      func(name) { name == lowerUsername },
+    let usernameExists : Bool = Array.find<(Principal, Text)>(
+      usernames,
+      func(entry : (Principal, Text)) : Bool {
+        Text.toLowercase(entry.1) == lowerUsername;
+      },
     ) != null;
 
     if (usernameExists) {
       return false;
     } else {
-      usernames := Array.filter(usernames, func(entry : (Principal, Text, Text)) : Bool { entry.0 != caller });
-      usernames := Array.append(usernames, [(caller, newUsername, Principal.toText(caller))]);
+      usernames := Array.filter(usernames, func(entry : (Principal, Text)) : Bool { entry.0 != caller });
+      usernames := Array.append(usernames, [(caller, newUsername)]);
       return true;
     };
   };
 
-  public query func getCustomAddress(userId : Principal) : async ?{ customAddress: Text; principal: Principal; principalText: Text } {
-    let result = Array.find<(Principal, Text, Text)>(
+  public query func getCustomAddress(userId : Principal) : async ?{ customAddress: Text; principal: Principal } {
+    let result : ?(Principal, Text) = Array.find<(Principal, Text)>(
       usernames,
-      func(entry : (Principal, Text, Text)) : Bool {
+      func(entry : (Principal, Text)) : Bool {
         entry.0 == userId;
       },
     );
-    return switch result {
-      case (?entry) ?{ customAddress = entry.1; principal = entry.0; principalText = entry.2 };
-      case null null;
-    };
+    switch (result) {
+      case (?entry) {
+        return ?{ customAddress = entry.1; principal = entry.0 };
+      };
+      case null {
+        return null;
+      };
+    }
   };
 
   public query func resolveCustomAddress(customAddress : Text) : async ?Principal {
-    let lowerCustomAddress = Text.toLowercase(customAddress);
-    let result = Array.find<(Principal, Text, Text)>(
+    let lowerCustomAddress : Text = Text.toLowercase(customAddress);
+    let result : ?(Principal, Text) = Array.find<(Principal, Text)>(
       usernames,
-      func(entry : (Principal, Text, Text)) : Bool {
+      func(entry : (Principal, Text)) : Bool {
         Text.toLowercase(entry.1) == lowerCustomAddress;
       },
     );
+    switch (result) {
+      case (?entry) {
+        return ?entry.0;
+      };
+      case null {
+        return null;
+      };
+    }
+  };
 
-    return switch result {
-      case (?entry) ?entry.0; // returning the Principal type directly
-      case null null;
-    };
-};
+  private func getCustomAddressOrPID(userId : Principal) : async Text {
+    let result : ?{ customAddress: Text; principal: Principal } = await getCustomAddress(userId);
+    switch result {
+      case (?data) data.customAddress;
+      case null Principal.toText(userId);
+    }
+  };
 
   type CustomOrder = {
     #less;
@@ -218,7 +236,7 @@ actor class Mailbox() = this {
   func sortMessagesByTimestamp(messages : [Message]) : [Message] {
     return Array.sort<Message>(
       messages,
-      func(a, b) : CustomOrder {
+      func(a : Message, b : Message) : CustomOrder {
         compareTimestamps(a.timestamp, b.timestamp);
       },
     );

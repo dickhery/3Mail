@@ -160,7 +160,7 @@ function App() {
   const handleCreateUsername = async () => {
     if (newUsername.trim() !== '') {
       try {
-        const success = await threeMailActor.setUsername(newUsername, Principal.fromText(principal));
+        const success = await threeMailActor.setUsername(newUsername);
         if (success) {
           setUsername(newUsername);
           setHasCustomAddress(true);
