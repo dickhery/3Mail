@@ -24,16 +24,10 @@ actor class Mailbox() = this {
     let sender = msg.caller;
 
     // Get sender's custom address or use PID if not available
-    let senderCustomAddress: Text = switch (await getCustomAddressOrPID(sender)) {
-      case (?address) address;
-      case null "";
-    };
+    let senderCustomAddress: Text = await getCustomAddressOrPID(sender);
 
     // Get recipient's custom address or use PID if not available
-    let recipientCustomAddress: Text = switch (await getCustomAddressOrPID(recipient)) {
-      case (?address) address;
-      case null "";
-    };
+    let recipientCustomAddress: Text = await getCustomAddressOrPID(recipient);
 
     let timestamp = Time.now();
 
@@ -188,7 +182,7 @@ actor class Mailbox() = this {
     };
   };
 
-  public query func getCustomAddress(userId : Principal) : async ?{ customAddress: Text; principal: Principal } {
+  public query func getCustomAddress(userId : Principal) : async ?Text {
     let result = Array.find<(Principal, Text)>(
       usernames,
       func(entry : (Principal, Text)) : Bool {
@@ -196,7 +190,7 @@ actor class Mailbox() = this {
       },
     );
     return switch result {
-      case (?entry) ?{ customAddress = entry.1; principal = entry.0 };
+      case (?entry) ?entry.1;
       case null null;
     };
   };
@@ -215,11 +209,11 @@ actor class Mailbox() = this {
     };
   };
 
-  private func getCustomAddressOrPID(userId : Principal) : async ?Text {
+  private func getCustomAddressOrPID(userId : Principal) : async Text {
     let result = await getCustomAddress(userId);
     switch result {
-      case (?data) ?data.customAddress;
-      case null null;
+      case (?customAddress) customAddress;
+      case null Principal.toText(userId);
     }
   };
 

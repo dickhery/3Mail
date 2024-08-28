@@ -22,7 +22,6 @@ function App() {
   const [hasCustomAddress, setHasCustomAddress] = useState(false);
   const [showCreateUsername, setShowCreateUsername] = useState(false);
   const [searchSubject, setSearchSubject] = useState('');
-  const [notification, setNotification] = useState(''); // New notification state
 
   useEffect(() => {
     async function initAuth() {
@@ -30,44 +29,40 @@ function App() {
       setAuthClient(client);
 
       if (await client.isAuthenticated()) {
-        await initializeUser(client);
+        const identity = client.getIdentity();
+        setPrincipal(identity.getPrincipal().toText());
+        setIsAuthenticated(true);
+
+        const agent = new HttpAgent({ identity });
+        const actor = Actor.createActor(threeMail_backend_idl, {
+          agent,
+          canisterId: threeMail_backend_id,
+        });
+        setThreeMailActor(actor);
+
+        await handleFetchUsername(actor, identity);
       }
     }
     initAuth();
   }, []);
 
-  const initializeUser = async (client) => {
-    const identity = client.getIdentity();
-    const principalId = identity.getPrincipal().toText();
-    setPrincipal(principalId);
-    setIsAuthenticated(true);
-
-    const agent = new HttpAgent({ identity });
-    const actor = Actor.createActor(threeMail_backend_idl, {
-      agent,
-      canisterId: threeMail_backend_id,
-    });
-    setThreeMailActor(actor);
-
+  const handleFetchUsername = async (actor, identity) => {
     try {
       const totalSent = await actor.getTotalMessagesSent();
       setTotalMessagesSent(totalSent.toString());
 
-      const storedUsername = await actor.getCustomAddress(Principal.fromText(principalId));
-      if (storedUsername && storedUsername.customAddress) {
-        setUsername(storedUsername.customAddress);
+      const storedUsername = await actor.getCustomAddress(Principal.fromText(identity.getPrincipal().toText()));
+      if (storedUsername && storedUsername !== null) {
+        setUsername(storedUsername);
         setHasCustomAddress(true);
-        setNotification('Custom address loaded successfully.');
-    } else {
-        setUsername(principalId);
+      } else {
+        setUsername(identity.getPrincipal().toText());
         setHasCustomAddress(false);
         setShowCreateUsername(true);
-        setNotification('No custom address found. Please create one.');
-    }
+      }
     } catch (error) {
-      console.error('Error initializing user data:', error);
+      console.error('Error fetching custom address:', error);
       setTotalMessagesSent("0");
-      setNotification('Failed to load custom address.');
     }
   };
 
@@ -77,16 +72,27 @@ function App() {
       await authClient.login({
         identityProvider: "https://identity.ic0.app",
         onSuccess: async () => {
-          await initializeUser(authClient);
+          const identity = authClient.getIdentity();
+          setPrincipal(identity.getPrincipal().toText());
+          setIsAuthenticated(true);
+
+          const agent = new HttpAgent({ identity });
+          const actor = Actor.createActor(threeMail_backend_idl, {
+            agent,
+            canisterId: threeMail_backend_id,
+          });
+          setThreeMailActor(actor);
+
+          await handleFetchUsername(actor, identity);
         }
       });
     }
   };
 
   const handleLogout = async () => {
-    resetTextFields();  // Reset fields before logout
     if (authClient) {
       await authClient.logout();
+      resetTextFields();
       setIsAuthenticated(false);
       setPrincipal('');
       setMessages([]);
@@ -103,19 +109,16 @@ function App() {
           const result = await threeMailActor.submitMessage(resolvedRecipient, subject, messageBody);
           setResponse(result);
           resetTextFields();
-          setNotification('Message sent successfully.');
 
           const totalSent = await threeMailActor.getTotalMessagesSent();
           setTotalMessagesSent(totalSent.toString());
         } else {
           setResponse("Recipient is not a valid Principal ID or custom address.");
-          setNotification('Failed to send message: Invalid recipient.');
         }
       }
     } catch (error) {
       console.error("Error sending message:", error);
       setResponse("Failed to send message. Check the console for more details.");
-      setNotification('Failed to send message due to an error.');
     }
   };
 
@@ -147,14 +150,11 @@ function App() {
           setUsername(newUsername);
           setHasCustomAddress(true);
           setShowCreateUsername(false);
-          setNotification('Custom address created successfully.');
         } else {
           alert('Username already exists. Please choose another one.');
-          setNotification('Username already exists. Please choose another one.');
         }
       } catch (error) {
         console.error('Failed to create username:', error);
-        setNotification('Failed to create custom address.');
       }
     }
   };
@@ -271,9 +271,6 @@ function App() {
     setMessageBody('');
     setNewUsername('');
     setSearchSubject('');
-    setResponse('');
-    setShowCreateUsername(false);
-    setNotification(''); // Reset the notification
   };
 
   const backgroundStyle = {
@@ -314,7 +311,6 @@ function App() {
           </>
         )}
       </div>
-
       {isAuthenticated && (
         <div>
           <button onClick={handleLogout} style={{ padding: '10px 20px', cursor: 'pointer', marginBottom: '20px' }}>
