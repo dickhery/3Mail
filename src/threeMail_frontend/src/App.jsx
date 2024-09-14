@@ -280,9 +280,10 @@ function App() {
     backgroundRepeat: 'no-repeat',
     height: '100vh',
     display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
     flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'flex-start', // Align items to the top
+    paddingTop: '50px', // Adjust the padding as needed
   };
 
   const mainBackgroundStyle = {
@@ -306,7 +307,15 @@ function App() {
               style={{ width: '150px', cursor: 'pointer', marginTop: '10px' }}
             />
             <p style={{ fontSize: '12px', marginTop: '20px', color: '#888' }}>
-              Created by <a href="https://richardhery.com" target="_blank" rel="noopener noreferrer" style={{ color: '#888' }}>RichardHery.com</a>
+              Created by{' '}
+              <a
+                href="https://richardhery.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: '#888' }}
+              >
+                RichardHery.com
+              </a>
             </p>
           </>
         )}
@@ -316,18 +325,38 @@ function App() {
           <button onClick={handleLogout} style={{ padding: '10px 20px', cursor: 'pointer', marginBottom: '20px' }}>
             Logout
           </button>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', marginBottom: '10px', flexDirection: 'column' }}>
-            <p><strong>Your 3Mail Address:</strong></p>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '14px',
+              marginBottom: '10px',
+              flexDirection: 'column',
+            }}
+          >
+            <p>
+              <strong>Your 3Mail Address:</strong>
+            </p>
             <p>{hasCustomAddress ? username : principal}</p>
-            <button onClick={handleCopyPrincipal} style={{ marginTop: '10px', padding: '5px', fontSize: '12px', cursor: 'pointer' }}>
+            <button
+              onClick={handleCopyPrincipal}
+              style={{ marginTop: '10px', padding: '5px', fontSize: '12px', cursor: 'pointer' }}
+            >
               Copy Address
             </button>
             {hasCustomAddress ? (
-              <button onClick={() => setShowCreateUsername(true)} style={{ marginTop: '10px', padding: '5px', fontSize: '12px', cursor: 'pointer' }}>
+              <button
+                onClick={() => setShowCreateUsername(true)}
+                style={{ marginTop: '10px', padding: '5px', fontSize: '12px', cursor: 'pointer' }}
+              >
                 Change Custom Address
               </button>
             ) : (
-              <button onClick={() => setShowCreateUsername(true)} style={{ marginTop: '10px', padding: '5px', fontSize: '12px', cursor: 'pointer' }}>
+              <button
+                onClick={() => setShowCreateUsername(true)}
+                style={{ marginTop: '10px', padding: '5px', fontSize: '12px', cursor: 'pointer' }}
+              >
                 Create Custom Address
               </button>
             )}
@@ -342,13 +371,24 @@ function App() {
                 onChange={(e) => setNewUsername(e.target.value)}
                 style={{ padding: '10px', width: '80%', textAlign: 'center', marginBottom: '10px' }}
               />
-              <button onClick={handleCreateUsername} style={{ padding: '10px 20px', cursor: 'pointer' }}>Save Custom Address</button>
+              <button onClick={handleCreateUsername} style={{ padding: '10px 20px', cursor: 'pointer' }}>
+                Save Custom Address
+              </button>
             </div>
           )}
 
           <div style={{ marginTop: '20px' }}>
             <h2>Send a Message</h2>
-            <form onSubmit={handleSendMessage} style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+            <form
+              onSubmit={handleSendMessage}
+              style={{
+                marginBottom: '20px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '10px',
+              }}
+            >
               <div style={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'center' }}>
                 <label>Recipient PID or Custom Address:</label>
                 <input
@@ -375,7 +415,9 @@ function App() {
                   style={{ padding: '5px', width: '300px', height: '100px', textAlign: 'center' }}
                 />
               </div>
-              <button type="submit" style={{ padding: '10px 20px', cursor: 'pointer', alignSelf: 'center' }}>Send Message</button>
+              <button type="submit" style={{ padding: '10px 20px', cursor: 'pointer', alignSelf: 'center' }}>
+                Send Message
+              </button>
             </form>
             {response && <p>{response}</p>}
           </div>
@@ -396,7 +438,10 @@ function App() {
             <button onClick={handleGetTotalMessages} style={{ padding: '10px 20px', cursor: 'pointer' }}>
               Check Total Messages
             </button>
-            <button onClick={handleDeleteAllMessages} style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: 'red', color: 'white' }}>
+            <button
+              onClick={handleDeleteAllMessages}
+              style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: 'red', color: 'white' }}
+            >
               Delete All Messages
             </button>
           </div>
@@ -410,42 +455,76 @@ function App() {
                 onChange={(e) => setSearchSubject(e.target.value)}
                 style={{ padding: '5px', width: '300px', textAlign: 'center' }}
               />
-              <button type="submit" style={{ padding: '10px 20px', cursor: 'pointer', marginTop: '10px', alignSelf: 'center' }}>Search</button>
+              <button
+                type="submit"
+                style={{ padding: '10px 20px', cursor: 'pointer', marginTop: '10px', alignSelf: 'center' }}
+              >
+                Search
+              </button>
             </div>
           </form>
 
           {messages.length > 0 && (
-            <div style={{ maxHeight: '300px', overflowY: 'scroll', border: '1px solid #ccc', padding: '10px', marginTop: '20px' }}>
+            <div
+              style={{
+                maxHeight: '300px',
+                overflowY: 'scroll',
+                border: '1px solid #ccc',
+                padding: '10px',
+                marginTop: '20px',
+              }}
+            >
               {messages.map((msg, index) => (
                 <div key={index} style={{ marginBottom: '10px', padding: '10px', borderBottom: '1px solid #ccc' }}>
-                  <strong>Subject:</strong> {msg.subject}<br />
-                  <strong>Message:</strong> {msg.message}<br />
-                  <strong>Timestamp:</strong> {new Date(Number(msg.timestamp / 1000000n)).toLocaleString()}<br />
-                  <strong>From:</strong> {msg.senderCustomAddress || msg.sender.toText()}<br />
+                  <strong>Subject:</strong> {msg.subject}
+                  <br />
+                  <strong>Message:</strong> {msg.message}
+                  <br />
+                  <strong>Timestamp:</strong> {new Date(Number(msg.timestamp / 1000000n)).toLocaleString()}
+                  <br />
+                  <strong>From:</strong> {msg.senderCustomAddress || msg.sender.toText()}
+                  <br />
                   {msg.recipientCustomAddress ? (
                     <>
-                      <strong>To:</strong> {msg.recipientCustomAddress}<br />
+                      <strong>To:</strong> {msg.recipientCustomAddress}
+                      <br />
                     </>
                   ) : null}
 
-                  <button onClick={() => handleMarkAsViewed(msg.timestamp)} style={{ marginLeft: '10px', cursor: 'pointer' }}>Mark as Viewed</button>
-                  <button onClick={() => handleDeleteMessage(msg.timestamp)} style={{ marginLeft: '10px', cursor: 'pointer' }}>Delete</button>
+                  <button onClick={() => handleMarkAsViewed(msg.timestamp)} style={{ marginLeft: '10px', cursor: 'pointer' }}>
+                    Mark as Viewed
+                  </button>
+                  <button onClick={() => handleDeleteMessage(msg.timestamp)} style={{ marginLeft: '10px', cursor: 'pointer' }}>
+                    Delete
+                  </button>
                 </div>
               ))}
             </div>
           )}
 
-          <div style={{ marginTop: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '10px', textAlign: 'center' }}>
+          <div
+            style={{
+              marginTop: '30px',
+              padding: '20px',
+              backgroundColor: '#f9f9f9',
+              borderRadius: '10px',
+              textAlign: 'center',
+            }}
+          >
             <h2>About 3Mail</h2>
             <p>
-              3Mail is a decentralized messaging app hosted on the Internet Computer blockchain. This ensures that your messages are secure,
-              immutable, and private.
+              3Mail is a decentralized messaging app hosted on the Internet Computer blockchain. This ensures that your messages
+              are secure, immutable, and private.
             </p>
             <p>
-              To date, <strong>{totalMessagesSent !== null ? totalMessagesSent : '...'}</strong> messages have been sent through 3Mail.
+              To date, <strong>{totalMessagesSent !== null ? totalMessagesSent : '...'}</strong> messages have been sent
+              through 3Mail.
             </p>
             <p>
-              Created by <a href="https://richardhery.com" target="_blank" rel="noopener noreferrer">RichardHery.com</a>
+              Created by{' '}
+              <a href="https://richardhery.com" target="_blank" rel="noopener noreferrer">
+                RichardHery.com
+              </a>
             </p>
           </div>
 
